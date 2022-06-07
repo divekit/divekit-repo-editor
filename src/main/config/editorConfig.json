@@ -3,6 +3,7 @@
   "onlyUpdateTestProjects": true,
   "onlyUpdateCodeProjects": false,
   "groupIds": [
-    1546
-  ]
+    1546, 1547
+  ],
+  "logLevel": "debug"
 }
