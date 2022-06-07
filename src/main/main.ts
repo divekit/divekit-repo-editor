@@ -1,5 +1,9 @@
+import {RepoEditor} from "./RepoEditor"
 
-console.info("Start repo-editor")
+
+const rootSomething = new RepoEditor()
+rootSomething.validateConfig()
+rootSomething.execute()
 
 // OpenTasks
 // - get all repositories from given code and test directories (config)
