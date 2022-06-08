@@ -1,9 +1,10 @@
 {
   "testRun": false,
-  "onlyUpdateTestProjects": true,
+  "onlyUpdateTestProjects": false,
   "onlyUpdateCodeProjects": false,
   "groupIds": [
-    1546, 1547
+    1862
   ],
-  "logLevel": "debug"
+  "logLevel": "debug",
+  "commitMsg": "fix readme"
 }

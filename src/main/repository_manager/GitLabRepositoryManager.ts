@@ -2,6 +2,7 @@ import {Gitlab, ProjectSchema} from "gitlab"
 import * as config from '../config/editorConfig.json'
 import dotenv from "dotenv";
 import {logger} from "../util/Logger";
+import fs from "fs";
 
 dotenv.config();
 const gitlab = new Gitlab({
@@ -16,12 +17,13 @@ const gitlab = new Gitlab({
  */
 export class GitLabRepositoryManager {
     private static readonly TEST_GROUP_FLAG: string = 'tests_group'
+    private static readonly COMMIT_MSG: string = config.commitMsg
 
     /**
      * iterate over the configured projects and update the repositories
      * according to the structure provided in **assets/**.
      * <br>
-     * _Note: all changes of students are overwritten_
+     * _Note: all changes are overwritten_
      */
     async processEdits(paths: string[]): Promise<void> {
         let projects: ProjectSchema[] = await GitLabRepositoryManager.getAllProjects()
@@ -31,8 +33,7 @@ export class GitLabRepositoryManager {
             return
         }
 
-        logger.debug(projects[0].name)
-        // TODO for all projects: get repos -> push everything according to assets
+        this.updateAllProjects(projects, paths)
     }
 
     /**
@@ -68,4 +69,43 @@ export class GitLabRepositoryManager {
         return projects.filter(it => filterName(it.name))
     }
 
+    private updateAllProjects(projects: ProjectSchema[], paths: string[]) {
+        projects.forEach(it => this.updateFiles(it, paths))
+    }
+
+    /**
+     * Update all given files in a project
+     * @param project to be updated
+     * @param paths list of paths to all files that will be updated
+     */
+    private updateFiles(project: ProjectSchema, paths: string[]) {
+        const commitActions: any[] = []
+        paths.forEach(path => {
+            const fileContent = GitLabRepositoryManager.readFileContent(path)
+            let commitAction: any = {
+                action: 'update', // 'create' | 'delete' | 'move' | 'update'; // TODO decide which action is appropriated
+                filePath: GitLabRepositoryManager.getGitFilePath(path),
+                content: fileContent
+            }
+            commitActions.push(commitAction)
+        })
+
+        logger.debug("send commit (" + GitLabRepositoryManager.COMMIT_MSG + ") for " + project.name + "")
+        const promise = gitlab.Commits.create(
+            project.id,
+            "master",
+            GitLabRepositoryManager.COMMIT_MSG,
+            commitActions
+        )
+        promise.catch(it => logger.error('Error while updating: ' + JSON.stringify(it)))
+        promise.then(_ => logger.info("updated " + project.name))
+    }
+
+    private static getGitFilePath(path: string): string {
+        return path.replace('assets/', '')
+    }
+
+    private static readFileContent(path: string) {
+        return fs.readFileSync(path).toString();
+    }
 }
