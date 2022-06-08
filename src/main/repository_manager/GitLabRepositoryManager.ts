@@ -83,7 +83,7 @@ export class GitLabRepositoryManager {
         paths.forEach(path => {
             const fileContent = GitLabRepositoryManager.readFileContent(path)
             let commitAction: any = {
-                action: 'update', // 'create' | 'delete' | 'move' | 'update'; // TODO decide which action is appropriated
+                action: GitLabRepositoryManager.getActionFromPath(path),
                 filePath: GitLabRepositoryManager.getGitFilePath(path),
                 content: fileContent
             }
@@ -98,14 +98,28 @@ export class GitLabRepositoryManager {
             commitActions
         )
         promise.catch(it => logger.error('Error while updating: ' + JSON.stringify(it)))
-        promise.then(_ => logger.info("updated " + project.name))
+        promise.then(_ => logger.info("edited " + project.name))
     }
 
+    /**
+     * extracts the action from path
+     * @param path in the following pattern: "assets/<ACTION>/*". Action can be one of: create, update, move, delete
+     */
+    private static getActionFromPath(path: string): string {
+        const splitPath = path.split('/')
+        return splitPath[1]
+    }
+
+    /**
+     * Extract the path without the prefix from the directory structure
+     * e.g. remove `assets/update/` from `assets/update/README.md`
+     */
     private static getGitFilePath(path: string): string {
-        return path.replace('assets/', '')
+        let re = /assets\/[a-z]*\/*/
+        return path.replace(re, '')
     }
 
     private static readFileContent(path: string) {
-        return fs.readFileSync(path).toString();
+        return fs.readFileSync(path).toString()
     }
 }
