@@ -38,9 +38,9 @@ Add all files that should be created or updated in the corresponding directories
 ```
 assets
 ├── create
-│  └── <ADD FILESTRUTE HERE>
+│  └── <ADD FILE STRUCTURE HERE>
 ├── update
-│  └── <ADD FILESTRUTE HERE>
+│  └── <ADD FILE STRUCTURE HERE>
 ├── delete
 └── move
 ```
