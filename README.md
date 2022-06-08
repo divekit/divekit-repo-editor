@@ -20,22 +20,55 @@ adjust individual files in repositories based on the used domain.
    command ```npm install``` in the root folder of this project.
 
 4.
-    - Navigate to your [Profile](https://git.st.archi-lab.io/-/profile/personal_access_tokens) and generate an Access Token / API-Token in
-      order to get access to the gitlab api
+    - Navigate to your [Profile](https://git.st.archi-lab.io/-/profile/personal_access_tokens) and generate an Access
+      Token / API-Token in order to get access to the gitlab api
     - Copy the Access Token
     - Rename the file .env.example to .env
     - Open .env and replace *YOUR_API_TOKEN* with the token you copied.
 
-5. Configure the application in the config *src/main/config/evaluationConfig.json*.
+5. Configure the application in the config *src/main/config/evaluationConfig.json*. see below for more details
 
 6. To run the application navigate into the root folder of this tool and run ```npm start```. The evaluation overview
    will now be printed in the console.
 
 ## Configuration
 
-TODO
+Add all files that should be created or updated in the corresponding directories:
+
+```
+assets
+├── create
+│  └── <ADD FILESTRUTE HERE>
+├── update
+│  └── <ADD FILESTRUTE HERE>
+├── delete
+└── move
+```
+
+_Note: move and delete are not yet tested_
+
+Configure `src/main/config/evaluationConfig.json`. Configure which groups should be updated and define the commit
+message:
+
+```json
+{
+  "testRun": false,
+  "onlyUpdateTestProjects": false,
+  "onlyUpdateCodeProjects": false,
+  "groupIds": [
+    1862
+  ],
+  "logLevel": "debug",
+  "commitMsg": "fix test-error"
+}
+
+```
 
 ## Changelog
+
+### 0.1.0
+
+- add feature to update or create files based on given structure in `asset/*/` for all repositories
 
 ### 0.0.1
 
