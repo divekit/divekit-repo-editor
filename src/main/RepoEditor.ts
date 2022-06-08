@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import {GitLabRepositoryManager} from "./repository_manager/GitLabRepositoryManager"
 import * as editorConfig from "./config/editorConfig.json"
-import {AssetManager} from "./util/AssetManager";
+import {AssetManager} from "./asset_manager/AssetManager";
 import {logger} from "./util/Logger";
 
 export class RepoEditor {

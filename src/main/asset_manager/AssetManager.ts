@@ -1,6 +1,6 @@
 import util from "util";
 import globModule from "glob";
-import {logger} from "./Logger";
+import {logger} from "../util/Logger";
 
 const glob = util.promisify(globModule);
 
