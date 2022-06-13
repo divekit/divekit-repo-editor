@@ -3,7 +3,7 @@
 > Note: The following describes the target behavior of the version 1.0.0.
 > The current status can be taken from the changelog.
 
-The divekit-repo-editor is based on the evaluation-processor. The editor allows the subsequent adjustment of individual
+The divekit-repo-editor allows the subsequent adjustment of individual
 files over a larger number of repositories.
 
 The editor has two different functionalities, one is to adjust a file equally in all repositories and the other is to
@@ -26,14 +26,14 @@ adjust individual files in repositories based on the used domain.
     - Rename the file .env.example to .env
     - Open .env and replace *YOUR_API_TOKEN* with the token you copied.
 
-5. Configure the application in the config *src/main/config/evaluationConfig.json*. see below for more details
+5. Configure the application via `src/main/config/`, see below for more details.
 
 6. To run the application navigate into the root folder of this tool and run ```npm start```. The evaluation overview
    will now be printed in the console.
 
 ## Configuration
 
-Add all files that should be created or updated in the corresponding directories:
+Place all files that should be created or updated in the corresponding directories:
 
 ```
 assets
@@ -47,7 +47,7 @@ assets
 
 _Note: move and delete are not yet tested_
 
-Configure `src/main/config/evaluationConfig.json`. Configure which groups should be updated and define the commit
+`src/main/config/editorConfig.json`: Configure which groups should be updated and define the commit
 message:
 
 ```json
