@@ -1,23 +1,24 @@
-import dotenv from "dotenv"
-import {GitLabRepositoryManager} from "./repository_manager/GitLabRepositoryManager"
-import * as editorConfig from "./config/editorConfig.json"
-import {AssetManager} from "./asset_manager/AssetManager";
-import {logger} from "./util/Logger";
+import dotenv from 'dotenv'
+import {GitLabRepositoryManager} from './repository_manager/GitLabRepositoryManager'
+import * as editorConfig from './config/editorConfig.json'
+import {AssetManager} from './asset_manager/AssetManager'
+import {logger} from './util/Logger'
 
 export class RepoEditor {
     private repositoryManager = new GitLabRepositoryManager()
 
+
     async validateConfig() {
-        logger.info("Load config...")
+        logger.info('Load config...')
 
         const result = dotenv.config()
         if (result.error) {
-            logger.error("Error while loading environment: " + result.error)
+            logger.error('Error while loading environment: ' + result.error)
             process.exit(500) // TODO read about node error codes
         }
 
         if (editorConfig.onlyUpdateCodeProjects && editorConfig.onlyUpdateTestProjects) {
-            logger.error("Invalid Config: Only one flag of 'onlyUpdateCodeProjects' and 'onlyUpdateTestProjects' can be true")
+            logger.error('Invalid Config: Only one flag of "onlyUpdateCodeProjects" and "onlyUpdateTestProjects" can be true')
             process.exit(500) // TODO read about node error codes
         }
 
@@ -25,10 +26,10 @@ export class RepoEditor {
     }
 
     async execute() {
-        logger.info("Start repo-editor")
+        logger.info('Start repo-editor')
 
         if (editorConfig.testRun) {
-            logger.info("This is a test run")
+            logger.info('This is a test run')
             // TODO implement usage e.g. do everything but don't push
             return
         }
@@ -37,6 +38,6 @@ export class RepoEditor {
         await assetManager.updateAssets()
         const assets = assetManager.getAssets()
 
-        await this.repositoryManager.processEdits(assets)//.then(r => console.info("Addition-Results: " + r))
+        await this.repositoryManager.processEdits(assets) // .then(r => console.info("Addition-Results: " + r))
     }
 }

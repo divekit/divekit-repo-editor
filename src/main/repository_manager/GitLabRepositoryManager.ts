@@ -1,10 +1,10 @@
-import {Gitlab, ProjectSchema} from "gitlab"
+import {Gitlab, ProjectSchema} from 'gitlab'
 import * as config from '../config/editorConfig.json'
-import dotenv from "dotenv";
-import {logger} from "../util/Logger";
-import fs from "fs";
+import dotenv from 'dotenv'
+import {logger} from '../util/Logger'
+import fs from 'fs'
 
-dotenv.config();
+dotenv.config()
 const gitlab = new Gitlab({
     host: process.env.HOST,
     token: process.env.API_TOKEN,
@@ -20,23 +20,6 @@ export class GitLabRepositoryManager {
     private static readonly COMMIT_MSG: string = config.commitMsg
 
     /**
-     * iterate over the configured projects and update the repositories
-     * according to the structure provided in **assets/**.
-     * <br>
-     * _Note: all changes are overwritten_
-     */
-    async processEdits(paths: string[]): Promise<void> {
-        let projects: ProjectSchema[] = await GitLabRepositoryManager.getAllProjects()
-
-        if (projects.length < 1) {
-            logger.warn("can't find any projects")
-            return
-        }
-
-        this.updateAllProjects(projects, paths)
-    }
-
-    /**
      * Get all projects inside multiple groups according to the config
      * <br>
      * _Used Config:
@@ -44,7 +27,7 @@ export class GitLabRepositoryManager {
      */
     private static async getAllProjects(): Promise<ProjectSchema[]> {
         let projects: ProjectSchema[] = []
-        let groupNames = (await gitlab.Groups.all())
+        const groupNames = (await gitlab.Groups.all())
             .filter(it => config.groupIds.includes(it.id))
             .map(g => g.full_path)
         logger.info('loaded groups: ' + groupNames)
@@ -60,45 +43,13 @@ export class GitLabRepositoryManager {
             projects = projects.concat(projectsOfGroup)
         }
 
-        let filterName = function (name: string) {
+        const filterName = (name: string) => {
             if (config.onlyUpdateTestProjects) return name.includes(GitLabRepositoryManager.TEST_GROUP_FLAG)
             if (config.onlyUpdateCodeProjects) return !name.includes(GitLabRepositoryManager.TEST_GROUP_FLAG)
             return true
         }
 
         return projects.filter(it => filterName(it.name))
-    }
-
-    private updateAllProjects(projects: ProjectSchema[], paths: string[]) {
-        projects.forEach(it => this.updateFiles(it, paths))
-    }
-
-    /**
-     * Update all given files in a project
-     * @param project to be updated
-     * @param paths list of paths to all files that will be updated
-     */
-    private updateFiles(project: ProjectSchema, paths: string[]) {
-        const commitActions: any[] = []
-        paths.forEach(path => {
-            const fileContent = GitLabRepositoryManager.readFileContent(path)
-            let commitAction: any = {
-                action: GitLabRepositoryManager.getActionFromPath(path),
-                filePath: GitLabRepositoryManager.getGitFilePath(path),
-                content: fileContent
-            }
-            commitActions.push(commitAction)
-        })
-
-        logger.debug("send commit (" + GitLabRepositoryManager.COMMIT_MSG + ") for " + project.name + "")
-        const promise = gitlab.Commits.create(
-            project.id,
-            "master",
-            GitLabRepositoryManager.COMMIT_MSG,
-            commitActions
-        )
-        promise.catch(it => logger.error('Error while updating: ' + JSON.stringify(it)))
-        promise.then(_ => logger.info("edited " + project.name))
     }
 
     /**
@@ -115,11 +66,60 @@ export class GitLabRepositoryManager {
      * e.g. remove `assets/update/` from `assets/update/README.md`
      */
     private static getGitFilePath(path: string): string {
-        let re = /assets\/[a-z]*\/*/
+        const re = /assets\/[a-z]*\/*/
         return path.replace(re, '')
     }
 
     private static readFileContent(path: string) {
         return fs.readFileSync(path).toString()
+    }
+
+    /**
+     * iterate over the configured projects and update the repositories
+     * according to the structure provided in **assets/**.
+     * <br>
+     * _Note: all changes are overwritten_
+     */
+    async processEdits(paths: string[]): Promise<void> {
+        const projects: ProjectSchema[] = await GitLabRepositoryManager.getAllProjects()
+
+        if (projects.length < 1) {
+            logger.warn('can\'t find any projects')
+            return
+        }
+
+        this.updateAllProjects(projects, paths)
+    }
+
+    private updateAllProjects(projects: ProjectSchema[], paths: string[]) {
+        projects.forEach(it => this.updateFiles(it, paths))
+    }
+
+    /**
+     * Update all given files in a project
+     * @param project to be updated
+     * @param paths list of paths to all files that will be updated
+     */
+    private updateFiles(project: ProjectSchema, paths: string[]) {
+        const commitActions: any[] = []
+        paths.forEach(path => {
+            const fileContent = GitLabRepositoryManager.readFileContent(path)
+            const commitAction: any = {
+                action: GitLabRepositoryManager.getActionFromPath(path),
+                filePath: GitLabRepositoryManager.getGitFilePath(path),
+                content: fileContent
+            }
+            commitActions.push(commitAction)
+        })
+
+        logger.debug('send commit (' + GitLabRepositoryManager.COMMIT_MSG + ') for ' + project.name + '')
+        const promise = gitlab.Commits.create(
+            project.id,
+            'master',
+            GitLabRepositoryManager.COMMIT_MSG,
+            commitActions
+        )
+        promise.catch(it => logger.error('Error while updating: ' + JSON.stringify(it)))
+        promise.then(_ => logger.info('edited ' + project.name))
     }
 }

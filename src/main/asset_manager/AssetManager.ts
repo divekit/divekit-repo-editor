@@ -1,8 +1,8 @@
-import util from "util";
-import globModule from "glob";
-import {logger} from "../util/Logger";
+import util from 'util'
+import globModule from 'glob'
+import {logger} from '../util/Logger'
 
-const glob = util.promisify(globModule);
+const glob = util.promisify(globModule)
 
 export class AssetManager {
     private assetPaths: string[] = []
