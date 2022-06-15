@@ -3,11 +3,10 @@
 > Note: The following describes the target behavior of the version 1.0.0.
 > The current status can be taken from the changelog.
 
-The divekit-repo-editor allows the subsequent adjustment of individual
-files over a larger number of repositories.
+The divekit-repo-editor allows the subsequent adjustment of individual files over a larger number of repositories.
 
 The editor has two different functionalities, one is to adjust a file equally in all repositories and the other is to
-adjust individual files in repositories based on the used domain.
+adjust individual files in repositories based on a UUID of a student.
 
 ## Setup & Run
 
@@ -33,38 +32,40 @@ adjust individual files in repositories based on the used domain.
 
 ## Configuration
 
-Place all files that should be created or updated in the corresponding directories:
+Place all files that should be edited in the corresponding directories:
 
 ```
 assets
-├── create
-│  └── <ADD FILE STRUCTURE HERE>
-├── update
-│  └── <ADD FILE STRUCTURE HERE>
-├── delete
-└── move
+├── DIR-WITH-UUID
+│  └── <add files for a specifig student here>
+├── DIR-WITH-UUID
+│  └── <add files for a specifig student here>
+└── <add files for ALL students here>
 ```
 
 _Note: move and delete are not yet tested_
 
-`src/main/config/editorConfig.json`: Configure which groups should be updated and define the commit
-message:
+`src/main/config/editorConfig.json`: Configure which groups should be updated and define the commit message:
 
 ```json
 {
-  "testRun": false,
-  "onlyUpdateTestProjects": false,
-  "onlyUpdateCodeProjects": false,
-  "groupIds": [
-    1862
-  ],
-  "logLevel": "debug",
-  "commitMsg": "fix test-error"
+   "individualUpdate": true,
+   "deleteFiles": "not yet implemented",
+   "onlyUpdateTestProjects": false,
+   "onlyUpdateCodeProjects": false,
+   "groupIds": [
+      1862
+   ],
+   "logLevel": "info",
+   "commitMsg": "update tests"
 }
-
 ```
 
 ## Changelog
+
+### 0.1.1
+
+- add feature to force create/update
 
 ### 0.1.0
 

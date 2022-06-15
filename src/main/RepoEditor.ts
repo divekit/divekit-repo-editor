@@ -28,12 +28,6 @@ export class RepoEditor {
     async execute() {
         logger.info('Start repo-editor')
 
-        if (editorConfig.testRun) {
-            logger.info('This is a test run')
-            // TODO implement usage e.g. do everything but don't push
-            return
-        }
-
         const assetManager = new AssetManager()
         await assetManager.updateAssets()
         const assets = assetManager.getAssets()

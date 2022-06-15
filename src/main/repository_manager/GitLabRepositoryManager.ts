@@ -16,8 +16,10 @@ const gitlab = new Gitlab({
  * Configuration is done via **src/main/config/*** and the file structure under **assets/**.
  */
 export class GitLabRepositoryManager {
+    // All config used from GitLabRepositoryManager
     private static readonly TEST_GROUP_FLAG: string = 'tests_group'
     private static readonly COMMIT_MSG: string = config.commitMsg
+    private static readonly FILE_EXISTS_ERROR: string = 'A file with this name already exists'
 
     /**
      * Get all projects inside multiple groups according to the config
@@ -53,25 +55,23 @@ export class GitLabRepositoryManager {
     }
 
     /**
-     * extracts the action from path
-     * @param path in the following pattern: "assets/<ACTION>/*". Action can be one of: create, update, move, delete
+     * Remove the path prefix from the directory structure
+     * e.g. remove `assets/` from `assets/README.md`
      */
-    private static getActionFromPath(path: string): string {
-        const splitPath = path.split('/')
-        return splitPath[1]
-    }
-
-    /**
-     * Extract the path without the prefix from the directory structure
-     * e.g. remove `assets/update/` from `assets/update/README.md`
-     */
-    private static getGitFilePath(path: string): string {
-        const re = /assets\/[a-z]*\/*/
-        return path.replace(re, '')
+    private static removePrefix(path: string, prefix: string = 'assets/'): string {
+        return path.replace(prefix, '')
     }
 
     private static readFileContent(path: string) {
         return fs.readFileSync(path).toString()
+    }
+
+    private static createCommitAction(path: string, action: CommitActionType): any {
+        return {
+            action: action.valueOf(),
+            filePath: GitLabRepositoryManager.removePrefix(path),
+            content: GitLabRepositoryManager.readFileContent(path)
+        }
     }
 
     /**
@@ -87,39 +87,63 @@ export class GitLabRepositoryManager {
             logger.warn('can\'t find any projects')
             return
         }
+        logger.info('files staged for commit: ' + paths)
 
-        this.updateAllProjects(projects, paths)
-    }
-
-    private updateAllProjects(projects: ProjectSchema[], paths: string[]) {
-        projects.forEach(it => this.updateFiles(it, paths))
+        projects.forEach(it => {
+            this.forceEdit(it, paths)
+                .catch(reason => logger.error('could not force edit. Reason: ' + JSON.stringify(reason)))
+        })
     }
 
     /**
-     * Update all given files in a project
-     * @param project to be updated
-     * @param paths list of paths to all files that will be updated
+     * Force file creation -> try to create and then update
      */
-    private updateFiles(project: ProjectSchema, paths: string[]) {
+    private async forceEdit(project: ProjectSchema, paths: string[]) {
+        const commitActions: any[] = this.createCommitActions(paths, CommitActionType.CREATE)
+
+        // logger.info('send force edits for: ' + project.name + '(' + GitLabRepositoryManager.COMMIT_MSG + ')')
+        for (const action of commitActions) {
+            try {
+                logger.debug('send create for ' + project.name + '/' + action.filePath)
+                const promise = gitlab.Commits.create(
+                    project.id,
+                    'master',
+                    GitLabRepositoryManager.COMMIT_MSG + ' [create]',
+                    [action]
+                )
+                await promise.then(_ => logger.info('CREATED ' + project.name + '/' + action.filePath))
+            } catch (e) {
+                if (e.description !== GitLabRepositoryManager.FILE_EXISTS_ERROR) {
+                    logger.error(project.name + '/' + action.filePath + ': ' + JSON.stringify(e))
+                }
+
+                action.action = CommitActionType.UPDATE.valueOf()
+                await this.sendUpdateAction(project, action)
+            }
+        }
+    }
+
+    private async sendUpdateAction(project: ProjectSchema, commitAction: any) {
+        logger.debug('send update: ' + project.name + '/' + commitAction.filePath)
+        try {
+            const promise = gitlab.Commits.create(
+                project.id,
+                'master',
+                GitLabRepositoryManager.COMMIT_MSG + ' [update]',
+                [commitAction]
+            )
+
+            await promise.then(_ => logger.info('UPDATED ' + project.name + '/' + commitAction.filePath))
+        } catch (e) {
+            logger.error('Error while updating: ' + project.name + '/' + commitAction.filePath + ' - ' + JSON.stringify(e))
+        }
+    }
+
+    private createCommitActions(paths: string[], action: CommitActionType): any[] {
         const commitActions: any[] = []
         paths.forEach(path => {
-            const fileContent = GitLabRepositoryManager.readFileContent(path)
-            const commitAction: any = {
-                action: GitLabRepositoryManager.getActionFromPath(path),
-                filePath: GitLabRepositoryManager.getGitFilePath(path),
-                content: fileContent
-            }
-            commitActions.push(commitAction)
+            commitActions.push(GitLabRepositoryManager.createCommitAction(path, action))
         })
-
-        logger.debug('send commit (' + GitLabRepositoryManager.COMMIT_MSG + ') for ' + project.name + '')
-        const promise = gitlab.Commits.create(
-            project.id,
-            'master',
-            GitLabRepositoryManager.COMMIT_MSG,
-            commitActions
-        )
-        promise.catch(it => logger.error('Error while updating: ' + JSON.stringify(it)))
-        promise.then(_ => logger.info('edited ' + project.name))
+        return commitActions
     }
 }

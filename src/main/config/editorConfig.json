@@ -1,10 +1,11 @@
 {
-  "testRun": false,
+  "individualUpdate": true,
+  "deleteFiles": "not yet implemented",
   "onlyUpdateTestProjects": false,
   "onlyUpdateCodeProjects": false,
   "groupIds": [
     1862
   ],
-  "logLevel": "debug",
-  "commitMsg": "fix readme"
+  "logLevel": "info",
+  "commitMsg": "update tests"
 }
