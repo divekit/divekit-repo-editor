@@ -3,6 +3,7 @@ import * as config from '../config/editorConfig.json'
 import dotenv from 'dotenv'
 import {logger} from '../util/Logger'
 import fs from 'fs'
+import {Asset} from '../asset_manager/Asset'
 
 dotenv.config()
 const gitlab = new Gitlab({
@@ -31,7 +32,7 @@ export class GitLabRepositoryManager {
         let projects: ProjectSchema[] = []
         const groupNames = (await gitlab.Groups.all())
             .filter(it => config.groupIds.includes(it.id))
-            .map(g => g.full_path)
+            .map(groupSchema => groupSchema.full_path)
         logger.info('loaded groups: ' + groupNames)
 
         if (!groupNames.length || groupNames.length !== config.groupIds.length) {
@@ -54,23 +55,15 @@ export class GitLabRepositoryManager {
         return projects.filter(it => filterName(it.name))
     }
 
-    /**
-     * Remove the path prefix from the directory structure
-     * e.g. remove `assets/` from `assets/README.md`
-     */
-    private static removePrefix(path: string, prefix: string = 'assets/'): string {
-        return path.replace(prefix, '')
-    }
-
     private static readFileContent(path: string) {
         return fs.readFileSync(path).toString()
     }
 
-    private static createCommitAction(path: string, action: CommitActionType): any {
+    private static createCommitAction(asset: Asset, action: CommitActionType): any {
         return {
             action: action.valueOf(),
-            filePath: GitLabRepositoryManager.removePrefix(path),
-            content: GitLabRepositoryManager.readFileContent(path)
+            filePath: asset.gitFilePath,
+            content: GitLabRepositoryManager.readFileContent(asset.localFilePath)
         }
     }
 
@@ -80,17 +73,19 @@ export class GitLabRepositoryManager {
      * <br>
      * _Note: all changes are overwritten_
      */
-    async processEdits(paths: string[]): Promise<void> {
+    async processEdits(assets: Asset[]): Promise<void> {
         const projects: ProjectSchema[] = await GitLabRepositoryManager.getAllProjects()
 
         if (projects.length < 1) {
             logger.warn('can\'t find any projects')
             return
         }
-        logger.info('files staged for commit: ' + paths)
+        logger.info('files staged for commit: ' + assets.map(it => it.projectName + '/' + it.gitFilePath).join(', '))
 
-        projects.forEach(it => {
-            this.forceEdit(it, paths)
+        projects.forEach(project => {
+            // only update generic and project specific changes
+            const filteredAssets = assets.filter(asset => !asset.projectName || asset.projectName === project.name)
+            this.forceEdit(project, filteredAssets)
                 .catch(reason => logger.error('could not force edit. Reason: ' + JSON.stringify(reason)))
         })
     }
@@ -98,27 +93,26 @@ export class GitLabRepositoryManager {
     /**
      * Force file creation -> try to create and then update
      */
-    private async forceEdit(project: ProjectSchema, paths: string[]) {
-        const commitActions: any[] = this.createCommitActions(paths, CommitActionType.CREATE)
+    private async forceEdit(project: ProjectSchema, assets: Asset[]) {
+        const commitActions: any[] = assets.map(it => GitLabRepositoryManager.createCommitAction(it, CommitActionType.CREATE))
 
-        // logger.info('send force edits for: ' + project.name + '(' + GitLabRepositoryManager.COMMIT_MSG + ')')
-        for (const action of commitActions) {
+        for (const commitAction of commitActions) {
+            logger.debug('send create for ' + project.name + '/' + commitAction.filePath)
             try {
-                logger.debug('send create for ' + project.name + '/' + action.filePath)
                 const promise = gitlab.Commits.create(
                     project.id,
                     'master',
                     GitLabRepositoryManager.COMMIT_MSG + ' [create]',
-                    [action]
+                    [commitAction]
                 )
-                await promise.then(_ => logger.info('CREATED ' + project.name + '/' + action.filePath))
+                await promise.then(_ => logger.info('CREATED ' + project.name + '/' + commitAction.filePath))
             } catch (e) {
                 if (e.description !== GitLabRepositoryManager.FILE_EXISTS_ERROR) {
-                    logger.error(project.name + '/' + action.filePath + ': ' + JSON.stringify(e))
+                    logger.error('Error while creating: ' + project.name + '/' + commitAction.filePath + ': ' + JSON.stringify(e))
                 }
 
-                action.action = CommitActionType.UPDATE.valueOf()
-                await this.sendUpdateAction(project, action)
+                commitAction.action = CommitActionType.UPDATE.valueOf()
+                await this.sendUpdateAction(project, commitAction)
             }
         }
     }
@@ -137,13 +131,5 @@ export class GitLabRepositoryManager {
         } catch (e) {
             logger.error('Error while updating: ' + project.name + '/' + commitAction.filePath + ' - ' + JSON.stringify(e))
         }
-    }
-
-    private createCommitActions(paths: string[], action: CommitActionType): any[] {
-        const commitActions: any[] = []
-        paths.forEach(path => {
-            commitActions.push(GitLabRepositoryManager.createCommitAction(path, action))
-        })
-        return commitActions
     }
 }

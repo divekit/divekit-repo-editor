@@ -1,11 +1,9 @@
 {
-  "individualUpdate": true,
-  "deleteFiles": "not yet implemented",
   "onlyUpdateTestProjects": false,
   "onlyUpdateCodeProjects": false,
   "groupIds": [
     1862
   ],
   "logLevel": "info",
-  "commitMsg": "update tests"
+  "commitMsg": "fix test 42"
 }
