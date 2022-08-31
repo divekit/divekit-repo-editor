@@ -32,25 +32,30 @@ adjust individual files in repositories based on the project name.
 Place all files that should be edited in the corresponding directories:
 
 ```
-assets
-├── PROJECT-NAME-WITH-UUID
-│  └── <add files for a specifig student here>
-├── PROJECT-NAME-WITH-UUID
-│  └── <add files for a specifig student here>
-└── <add files for ALL students here>
+input
+└── assets
+   ├── code
+   │  ├── PROJECT-NAME-WITH-UUID
+   │  │  └── <add files for a specifig student here>
+   │  └── ...
+   ├── test
+   │  ├── PROJECT-NAME-WITH-UUID
+   │  │  └── <add files for a specifig student here>
+   │  └── ...
+   └── <add files for ALL repos here>
 ```
 
 `src/main/config/editorConfig.json`: Configure which groups should be updated and define the commit message:
 
 ```json
 {
-   "onlyUpdateTestProjects": false,
-   "onlyUpdateCodeProjects": false,
-   "groupIds": [
-      1862
-   ],
-   "logLevel": "info",
-   "commitMsg": "individual update test"
+  "onlyUpdateTestProjects": false,
+  "onlyUpdateCodeProjects": false,
+  "groupIds": [
+    1862
+  ],
+  "logLevel": "info",
+  "commitMsg": "individual update test"
 }
 ```
 

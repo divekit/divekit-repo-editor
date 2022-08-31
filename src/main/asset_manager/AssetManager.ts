@@ -7,8 +7,15 @@ const glob = util.promisify(globModule)
 
 export class AssetManager {
     private assets: Asset[] = []
+    private pathPrefix = ''
 
-    async updateAssets(src: string = 'assets'): Promise<void> {
+    constructor(pathPrefix?: string) {
+        if (pathPrefix) {
+            this.pathPrefix = pathPrefix
+        }
+    }
+
+    async updateAssets(src: string = 'assets/input'): Promise<void> {
         await glob(src + '/**/*.*').then((files: string[]) => {
             logger.info('found ' + files.length + ' assets')
             this.assets = files.map(it => new Asset(it))
