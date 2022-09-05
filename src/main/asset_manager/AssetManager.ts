@@ -12,11 +12,13 @@ export class AssetManager {
     constructor(pathPrefix?: string) {
         if (pathPrefix) {
             this.pathPrefix = pathPrefix
+        } else {
+            this.pathPrefix = 'assets/input'
         }
     }
 
-    async updateAssets(src: string = 'assets/input'): Promise<void> {
-        await glob(src + '/**/*.*').then((files: string[]) => {
+    async updateAssets(): Promise<void> {
+        await glob(this.pathPrefix + '/**/*.*').then((files: string[]) => {
             logger.info('found ' + files.length + ' assets')
             this.assets = files.map(it => new Asset(it))
         })

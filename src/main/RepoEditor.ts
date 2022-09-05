@@ -6,31 +6,32 @@ import {logger} from './util/Logger'
 
 export class RepoEditor {
     private repositoryManager = new GitLabRepositoryManager()
+    private assetManager: AssetManager
 
+    constructor(assetManger: AssetManager) {
+        this.assetManager = assetManger
+    }
 
     async validateConfig() {
         logger.info('Load config...')
 
         const result = dotenv.config()
         if (result.error) {
-            logger.error('Error while loading environment: ' + result.error)
-            process.exit(500) // TODO read about node error codes
+            throw new Error('Error while loading environment: ' + result.error)
         }
 
         if (editorConfig.onlyUpdateCodeProjects && editorConfig.onlyUpdateTestProjects) {
-            logger.error('Invalid Config: Only one flag of "onlyUpdateCodeProjects" and "onlyUpdateTestProjects" can be true')
-            process.exit(500) // TODO read about node error codes
+            throw new Error('Invalid Config: Only one flag of "onlyUpdateCodeProjects" and "onlyUpdateTestProjects" can be true')
         }
 
-        // TODO add and validate variant config
+        logger.info('Load loaded')
     }
 
     async execute() {
         logger.info('Start repo-editor')
 
-        const assetManager = new AssetManager()
-        await assetManager.updateAssets()
-        const assets = assetManager.getAssets()
+        await this.assetManager.updateAssets()
+        const assets = this.assetManager.getAssets()
 
         await this.repositoryManager.processEdits(assets) // .then(r => console.info("Addition-Results: " + r))
     }
