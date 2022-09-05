@@ -1,38 +1,60 @@
+const enum AssetType {
+    CODE = 'code',
+    TEST = 'test',
+    ALL = 'all'
+}
+
 export class Asset {
     private static readonly UUID_REGEX = new RegExp('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
-    // e.g. assets/input/test/ST2M2_tests_group_824e7ace-30a3-4670-ab6c-e56a9a42f2d7/README.md
-    private static readonly INPUT_DEPTH_SPECIFIC_PROJECT = 4
-    // e.g. assets/README.md
-    private static readonly INPUT_DEPTH_ALL_PROJECTS = 2
 
     readonly localFilePath: string
     readonly gitFilePath: string
     readonly projectName: string | undefined
+    readonly type: AssetType
+    readonly isUserSpecific: boolean
 
     constructor(filePath: string) {
         this.localFilePath = filePath
+        this.type = Asset.determineType(filePath)
         this.projectName = Asset.determineProjectName(filePath)
-        this.gitFilePath = Asset.extractGitPath(filePath, this.projectName !== undefined)
+        this.isUserSpecific = this.projectName !== undefined
+        this.gitFilePath = this.extractGitPath(filePath)
     }
 
     private static determineProjectName(path: string): string | undefined {
-        const splitPath = path.split('/')
-        if (splitPath.length < this.INPUT_DEPTH_SPECIFIC_PROJECT) return undefined
-        const projectName = splitPath[this.INPUT_DEPTH_SPECIFIC_PROJECT - 1]
-        if (this.UUID_REGEX.test(projectName)) return projectName
-        return undefined
+        const breadcrumbs = path.split('/')
+        return breadcrumbs.find(it => this.UUID_REGEX.test(it))
+    }
+
+    private static determineType(path: string): AssetType {
+        const breadcrumbs = path.split('/')
+
+        for (const it of breadcrumbs) {
+            switch (it) {
+                case AssetType.ALL.valueOf():
+                    return AssetType.ALL
+                case AssetType.TEST.valueOf():
+                    return AssetType.TEST
+                case AssetType.CODE.valueOf():
+                    return AssetType.CODE
+            }
+        }
+
+        throw new Error('files may only be placed in the subdirectories: all, code and test: ' + path)
     }
 
     /**
      * extracts the git path from the current file path in the local file system <br>
      * _note also ignores the current owner, if set_
      */
-    private static extractGitPath(path: string, includesName: boolean): string {
-        let depthCount = this.INPUT_DEPTH_ALL_PROJECTS
-        if (includesName) depthCount = this.INPUT_DEPTH_SPECIFIC_PROJECT
-        const splitPath = path.split('/', depthCount)
-        const prefix = splitPath.join('/') + '/'
+    private extractGitPath(path: string): string {
+        let gitPath = path.substr(path.indexOf(this.type.valueOf()))
+        gitPath = gitPath.replace(this.type.valueOf() + '/', '')
 
-        return path.replace(prefix, '')
+        if (this.projectName) {
+            gitPath = gitPath.replace(this.projectName + '/', '')
+        }
+
+        return gitPath
     }
 }

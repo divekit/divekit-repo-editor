@@ -25,7 +25,8 @@ adjust individual files in repositories based on the project name.
 5. Configure the application via `src/main/config/` and add files to `assets/`, see below for more details.
 
 6. To run the application navigate into the root folder of this tool and run ```npm start```. All assets will be
-   updated.
+   updated. _Use `npm run useSetupInput` if you want to use the latest output of the automated-repo-setup as input for
+   the edit._
 
 ## Configuration
 
