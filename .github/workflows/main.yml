@@ -24,7 +24,7 @@ jobs:
         with:
           script: core.setFailed('Version must not include beta tag!')
       - name: Build package
-        run: npm ci # npm install but optimized for pipeline usage
+        run: npm ci # npm install but optimized for pipeline  usage
       - name: Publish to npm
         id: publish
         uses: JS-DevTools/npm-publish@v1
