@@ -82,12 +82,12 @@ export class GitLabRepositoryManager {
         }
         logger.info('files staged for commit: ' + assets.map(it => it.projectName + '/' + it.gitFilePath).join(', '))
 
-        projects.forEach(project => {
+        for(const project of projects) {
             // only update generic and project specific changes
             const filteredAssets = assets.filter(asset => !asset.projectName || asset.projectName === project.name)
-            this.forceEdit(project, filteredAssets)
-                .catch(reason => logger.error('could not force edit. Reason: ' + JSON.stringify(reason)))
-        })
+            await this.forceEdit(project, filteredAssets)
+                    .catch(reason => logger.error('could not force edit. Reason: ' + JSON.stringify(reason)))
+        }
     }
 
     /**
