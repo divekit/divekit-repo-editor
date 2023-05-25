@@ -2,8 +2,9 @@
   "onlyUpdateTestProjects": false,
   "onlyUpdateCodeProjects": false,
   "groupIds": [
-    1862
+    101,
+    102
   ],
   "logLevel": "info",
-  "commitMsg": "fix test 42"
+  "commitMsg": "Patch applied on 2023-05-25 17:07"
 }
