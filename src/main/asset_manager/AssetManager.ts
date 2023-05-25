@@ -18,7 +18,7 @@ export class AssetManager {
     }
 
     async updateAssets(): Promise<void> {
-        await glob(this.pathPrefix + '/**/*.*').then((files: string[]) => {
+        await glob(this.pathPrefix + '/**/*.*', { dot: true }).then((files: string[]) => {
             logger.info('found ' + files.length + ' assets')
             this.assets = files.map(it => new Asset(it))
         })

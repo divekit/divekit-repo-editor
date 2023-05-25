@@ -11,6 +11,9 @@ const gitlab = new Gitlab({
     token: process.env.API_TOKEN,
 })
 
+// Get main branch name from environment variable or default to "master"
+const mainBranch = process.env.DIVEKIT_MAINBRANCH_NAME || 'master'
+
 /**
  * Process all configured edits.
  * <br>
@@ -101,7 +104,7 @@ export class GitLabRepositoryManager {
             try {
                 const promise = gitlab.Commits.create(
                     project.id,
-                    'master',
+                    mainBranch,
                     GitLabRepositoryManager.COMMIT_MSG + ' [create]',
                     [commitAction]
                 )
@@ -122,7 +125,7 @@ export class GitLabRepositoryManager {
         try {
             const promise = gitlab.Commits.create(
                 project.id,
-                'master',
+                mainBranch,
                 GitLabRepositoryManager.COMMIT_MSG + ' [update]',
                 [commitAction]
             )
