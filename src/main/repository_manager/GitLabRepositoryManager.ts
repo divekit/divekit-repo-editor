@@ -40,7 +40,7 @@ export class GitLabRepositoryManager {
 
         if (!groupNames.length || groupNames.length !== config.groupIds.length) {
             const missing = config.groupIds.length - groupNames.length
-            logger.warn('Exit. Could not find all groups. Missing ' + missing + ' of ' + config.groupIds)
+            logger.error('Exit. Could not find all groups. Missing ' + missing + ' of ' + config.groupIds.length)
             return []
         }
 

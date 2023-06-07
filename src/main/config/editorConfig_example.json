@@ -1,5 +1,5 @@
 {
-  "onlyUpdateTestProjects": false,
+  "onlyUpdateTestProjects": true,
   "onlyUpdateCodeProjects": false,
   "groupIds": [
     404
