@@ -14,6 +14,8 @@ const gitlab = new Gitlab({
 // Get main branch name from environment variable or default to "master"
 const mainBranch = process.env.DIVEKIT_MAINBRANCH_NAME || 'master'
 
+const encoding = "base64"
+
 /**
  * Process all configured edits.
  * <br>
@@ -59,14 +61,15 @@ export class GitLabRepositoryManager {
     }
 
     private static readFileContent(path: string) {
-        return fs.readFileSync(path).toString()
+        return fs.readFileSync(path).toString(encoding)
     }
 
     private static createCommitAction(asset: Asset, action: CommitActionType): any {
         return {
             action: action.valueOf(),
             filePath: asset.gitFilePath,
-            content: GitLabRepositoryManager.readFileContent(asset.localFilePath)
+            content: GitLabRepositoryManager.readFileContent(asset.localFilePath),
+            encoding: encoding
         }
     }
 
